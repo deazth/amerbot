@@ -6,13 +6,13 @@ class WhatToFeedback:
     
         retval = ""
         #connect to DB
+        
         con = cx_Oracle.connect('BILL_VIEWER/biLLvi3w@10.41.23.141/HBRMPRD')
         curr = con.cursor()
         
         if inputmsg.startswith("nova bainfo "):
             banum = inputmsg[12:]
             retval = self.getBAInfoNOVA(curr, banum)
-        
         
         curr.close()
         con.close()

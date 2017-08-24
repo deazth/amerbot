@@ -1,5 +1,6 @@
 import sys
 import time
+from text_feedback          import WhatToFeedback
 from yowsup.layers.interface                           import YowInterfaceLayer, ProtocolEntityCallback
 from yowsup.layers.protocol_messages.protocolentities  import TextMessageProtocolEntity
 from yowsup.layers.protocol_receipts.protocolentities  import OutgoingReceiptProtocolEntity
@@ -58,17 +59,19 @@ class EchoLayer(YowInterfaceLayer):
         elif message == 'list command':
             answer = """List of command
 
-  <system> <query> [arguments]
+  <system> <query>
 
 System: NOVA or ICP
 
 Query:
   *unbilled* - display number of unbilled account
   *progress* - current step of bill run
+  *bainfo* <banumber> - BA Summary
 """
 
         else:
-            answer = ""
+            a = WhatToFeedback()
+            answer = a.getFeedback(message)
 
         if answer != "":
             print "sending to "+recipient+" : "+answer
