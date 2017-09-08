@@ -5,6 +5,7 @@ from yowsup.layers.interface                           import YowInterfaceLayer,
 from yowsup.layers.protocol_messages.protocolentities  import TextMessageProtocolEntity
 from yowsup.layers.protocol_receipts.protocolentities  import OutgoingReceiptProtocolEntity
 from yowsup.layers.protocol_acks.protocolentities      import OutgoingAckProtocolEntity
+from yowsup.layers.auth import YowAuthenticationProtocolLayer
 
 
 class EchoLayer(YowInterfaceLayer):
@@ -21,7 +22,8 @@ class EchoLayer(YowInterfaceLayer):
         if messageProtocolEntity.getType() == 'text':
             try:
                 self.onTextMessage(messageProtocolEntity) 
-            except Exception:
+            except Exception as e:
+                print(e)
                 print "error on message by "+messageProtocolEntity.getNotify()
 
             if self.removeNonAscii(messageProtocolEntity.getBody().lower()) == 'init 0':
@@ -36,40 +38,35 @@ class EchoLayer(YowInterfaceLayer):
     def onTextMessage(self,messageProtocolEntity):
         namemitt   = messageProtocolEntity.getNotify()
         message    = self.removeNonAscii(messageProtocolEntity.getBody().lower())
-        recipient  = messageProtocolEntity.getFrom()
+        recipient  = messageProtocolEntity.getFrom() if not messageProtocolEntity.isGroupMessage() else messageProtocolEntity.getParticipant()
         textmsg    = TextMessageProtocolEntity
         answer     = ""
+        
+        
             
-        print "Message from: "+namemitt+"@"+recipient+" - "+message
-
     #    if messageProtocolEntity.isGroupMessage():
     #        dashpos = recipient.find("@")
     #        if dashpos != -1 :
     #            recipient = recipient[:dashpos]+"@s.whatsapp.net"
 
-        if message == 'hi':
-            answer = "Hi "+namemitt+" " 
-
-        elif message.startswith("hoi"):
-            answer = "Bawak2 bersabor, "+namemitt+" "
-
-        elif message == 'init 0':
+        if message == 'init 0':
             answer = "Ok "+namemitt+", shutting down. Bye bye."
 
         elif message == 'list command':
             answer = """List of command
 
-  <system> <query>
+ *NOVA <query>*
 
-System: NOVA or ICP
-
-Query:
-  *unbilled* - display number of unbilled account
-  *progress* - current step of bill run
+Queries:
+  *cmcount* - CM count for each nodes
   *bainfo* <banumber> - BA Summary
 """
-
-        else:
+        elif message.startswith("nova "):
+        
+            print "Message from: "+namemitt+"@"+recipient+" - "+message
+            if messageProtocolEntity.isGroupMessage():
+                print messageProtocolEntity.getFrom()
+            
             a = WhatToFeedback()
             answer = a.getFeedback(message)
 

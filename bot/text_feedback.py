@@ -1,4 +1,5 @@
 import cx_Oracle
+import paramiko
 
 class WhatToFeedback:
     
@@ -7,16 +8,17 @@ class WhatToFeedback:
         retval = ""
         #connect to DB
         
-        con = cx_Oracle.connect('BILL_VIEWER/biLLvi3w@10.41.23.141/HBRMPRD')
-        curr = con.cursor()
         
         if inputmsg.startswith("nova bainfo "):
+            con = cx_Oracle.connect('BILL_VIEWER/biLLvi3w@10.41.23.141/HBRMPRD')
+            curr = con.cursor()
             banum = inputmsg[12:]
             retval = self.getBAInfoNOVA(curr, banum)
-        
-        curr.close()
-        con.close()
-
+            curr.close()
+            con.close()
+            
+        elif inputmsg == 'nova cmcount':
+            retval = self.getCMCountNOVA()
         
         return retval
         
@@ -47,4 +49,32 @@ Pending Revc: {5}""".format(banumber, rlname, raccstt, rlbdue, rbdate, rprcv)
             break
             
         return retstr
+        
+        
+    def getCMCountNOVA(self):
+        ssh = paramiko.SSHClient()
+        ssh.load_system_host_keys()
+        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        
+        ssh.connect("10.41.24.22", username="pin", password="novapin123")
+        ssh_stdin, ssh_stdout, ssh_stderr = ssh.exec_command("ps -ef | grep /app/brm/base/bin/cm | wc -l")
+        node1count = ssh_stdout.read().split('\n', 1)[0]
+        ssh.close()
+        
+        ssh.connect("10.41.24.23", username="pin", password="novapin123")
+        ssh_stdin, ssh_stdout, ssh_stderr = ssh.exec_command("ps -ef | grep /app/brm/base/bin/cm | wc -l")
+        node2count = ssh_stdout.read().split('\n', 1)[0]
+        ssh.close()
+        
+        ssh.connect("10.41.24.194", username="pin", password="novapin123")
+        ssh_stdin, ssh_stdout, ssh_stderr = ssh.exec_command("ps -ef | grep /app/brm/base/bin/cm | wc -l")
+        node3count = ssh_stdout.read().split('\n', 1)[0]
+        ssh.close()
+        
+        ssh.connect("10.41.24.250", username="pin", password="novapin123")
+        ssh_stdin, ssh_stdout, ssh_stderr = ssh.exec_command("ps -ef | grep /app/brm/base/bin/cm | wc -l")
+        node4count = ssh_stdout.read().split('\n', 1)[0]
+        ssh.close()
+        
+        return "CM count\nnode1: "+node1count+"\n"+"node2: "+node2count+"\n"+"node3: "+node3count+"\n"+"node4: "+node4count
         
